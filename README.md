@@ -5,7 +5,7 @@ Copy and paste on your profile
 
 ---
 ### Pre-requirements
-I ahve used 5 python modules in this code : OpenCV, smtplib, os, datetime and email.mime(MIMEText, MIMEImage, MIMEMultipart). Make sure those modules are installed on your system.
+I have used 5 python modules in this code : OpenCV, smtplib, os, datetime and email.mime(MIMEText, MIMEImage, MIMEMultipart). Make sure those modules are installed on your system.
 
 ---
 ### How to use
