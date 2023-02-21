@@ -1,3 +1,4 @@
+import time
 import cv2
 from datetime import datetime
 import smtplib
@@ -21,7 +22,7 @@ def alert(time, image):
 
     user = "johnnyblah69@gmail.com"
     msg['from'] = user
-    password = "nxmhypfzqfsrvpih"
+    password = "lwvdfqotmwykjjbd"
 
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
@@ -32,25 +33,34 @@ def alert(time, image):
 
 
 cap = cv2.VideoCapture(0)
-frame1 = None
+bg = None
 prev_movement = datetime.strptime('00:00:00', "%H:%M:%S")
-
+check, frame = cap.read()
+time.sleep(2)
 while True:
     check, frame = cap.read()
+
+    # Performing morphological operations to remove noise
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (21, 21), 0)
+    blur = cv2.GaussianBlur(gray, (21, 21), 0)
 
-    if frame1 is None:
-        frame1 = gray
+    if bg is None:
+        bg = blur
         continue
-    delta_frame = cv2.absdiff(frame1, gray)
-    thres = cv2.threshold(delta_frame, 50, 255, cv2.THRESH_BINARY)[1]
-    thres = cv2.dilate(thres, None, iterations=2)
 
+    # Background subtraction method
+    delta_frame = cv2.absdiff(bg, blur)
+    # thres = cv2.threshold(delta_frame, 30, 255, cv2.THRESH_BINARY)[1]
+    delta_frame = cv2.erode(delta_frame, None, iterations=3)
+    delta_frame = cv2.dilate(delta_frame, None, iterations=3)
+    delta_frame = cv2.GaussianBlur(delta_frame, (21, 21), 0)
+    thres = cv2.threshold(delta_frame, 30, 255, cv2.THRESH_BINARY)[1]
+
+    # Finding contours
     (cntr, _) = cv2.findContours(thres.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in cntr:
-        if cv2.contourArea(contour)<1000:
+        if cv2.contourArea(contour)<10000:
             continue
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
@@ -67,8 +77,12 @@ while True:
             prev_movement = datetime.strptime(dtString, "%H:%M:%S")
 
     cv2.imshow("Webcam", frame)
+    cv2.imshow("thres", cv2.resize(thres, (400, 300)))
+    cv2.imshow("delta", cv2.resize(delta_frame, (400, 300)))
+    cv2.imshow("blur", cv2.resize(blur, (400, 300)))
+
     key = cv2.waitKey(1)
-    if key == ord('q'):
+    if key == ord('q' or 'Q'):
         break
 
 cap.release()
